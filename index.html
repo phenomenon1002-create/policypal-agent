@@ -206,7 +206,6 @@ body{font-family:'Outfit','Noto Sans TC',sans-serif;background:var(--bg);min-hei
 <script>
 const SUPABASE_URL = 'https://bayjzxyacueqinjheljy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheWp6eHlhY3VlcWluamhlbGp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjYwNDEsImV4cCI6MjA5NDk0MjA0MX0.ZVvhMOkv5yA22z3nU84JzfLPt5dQkd2olHCj2jkLc_s';
-const AGENTS = { 'agent001': { pass:'1234', name:'陳業務 Agent Chen' } };
 let currentAgent = null, allClients = [], allPolicies = [];
 const POL_NAMES = {
   '醫療險':['住院醫療日額給付附約','實支實付醫療費用附約','日額型住院醫療險','綜合醫療終身附約','手術醫療附約','住院手術醫療附約'],
@@ -224,15 +223,50 @@ async function sbFetch(path,method='GET',body=null){
   if(!res.ok)throw new Error(await res.text());
   const t=await res.text();return t?JSON.parse(t):[];
 }
-function doLogin(){
-  const u=document.getElementById('au').value.trim(),p=document.getElementById('ap').value;
-  if(AGENTS[u]&&AGENTS[u].pass===p){
-    currentAgent=AGENTS[u];
-    document.getElementById('login').style.display='none';
-    document.getElementById('dashboard').style.display='flex';
-    document.getElementById('agent-name').textContent='歡迎，'+currentAgent.name;
-    loadData();
-  }else showToast('❌ 帳號或密碼錯誤');
+function showRegister(){
+  document.getElementById('login-form').style.display='none';
+  document.getElementById('register-form').style.display='block';
+}
+function showLogin(){
+  document.getElementById('register-form').style.display='none';
+  document.getElementById('login-form').style.display='block';
+}
+async function doLogin(){
+  const phone=document.getElementById('au').value.replace(/\D/g,'');
+  const pass=document.getElementById('ap').value;
+  if(!phone||!pass){showToast('⚠️ 請填寫帳號與密碼');return;}
+  try{
+    const agents=await sbFetch('agents?phone=eq.'+phone+'&password=eq.'+encodeURIComponent(pass)+'&select=*');
+    if(agents.length){
+      currentAgent=agents[0];
+      document.getElementById('login').style.display='none';
+      document.getElementById('dashboard').style.display='flex';
+      document.getElementById('agent-name').textContent='歡迎，'+currentAgent.name;
+      loadData();
+    }else showToast('❌ 帳號或密碼錯誤');
+  }catch(e){showToast('❌ 登入失敗：'+e.message);}
+}
+async function doRegister(){
+  const name=document.getElementById('rn').value.trim();
+  const phone=document.getElementById('rp').value.replace(/\D/g,'');
+  const pw=document.getElementById('rpw').value;
+  const pw2=document.getElementById('rpw2').value;
+  if(!name||!phone||!pw||!pw2){showToast('⚠️ 請填寫所有欄位');return;}
+  if(!/^09\d{8}$/.test(phone)){showToast('⚠️ 手機號碼格式錯誤');return;}
+  if(pw.length<4){showToast('⚠️ 密碼至少4位數');return;}
+  if(pw!==pw2){showToast('⚠️ 兩次密碼不一致');return;}
+  try{
+    const exist=await sbFetch('agents?phone=eq.'+phone+'&select=id');
+    if(exist.length){showToast('⚠️ 此手機號碼已註冊');return;}
+    await sbFetch('agents','POST',{name,phone,password:pw});
+    showToast('✅ 註冊成功！請登入');
+    document.getElementById('rn').value='';
+    document.getElementById('rp').value='';
+    document.getElementById('rpw').value='';
+    document.getElementById('rpw2').value='';
+    showLogin();
+    document.getElementById('au').value=phone;
+  }catch(e){showToast('❌ 註冊失敗：'+e.message);}
 }
 function doLogout(){currentAgent=null;document.getElementById('login').style.display='flex';document.getElementById('dashboard').style.display='none';}
 async function loadData(){
