@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PolicyPal 業務員後台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0f1f3d;--blue:#1a56db;--blue2:#1e429f;
+  --green:#10b981;--red:#ef4444;--gold:#f59e0b;
+  --bg:#f0f2f5;--white:#fff;
+  --gray1:#f8fafc;--gray2:#e2e8f0;--gray3:#94a3b8;--gray4:#475569;--gray5:#1e293b;
+  --shadow:0 4px 20px rgba(15,31,61,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Outfit','Noto Sans TC',sans-serif;background:var(--bg);min-height:100vh;}
+
+/* LOGIN */
+#login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,var(--navy) 0%,#162847 100%);}
+.login-box{background:white;border-radius:24px;padding:36px 28px;width:100%;max-width:400px;box-shadow:var(--shadow);}
+.login-logo{text-align:center;margin-bottom:24px;}
+.login-logo-icon{width:68px;height:68px;background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 12px;}
+.login-title{font-size:22px;font-weight:800;color:var(--navy);}
+.login-sub{font-size:13px;color:var(--gray3);margin-top:4px;}
+.lf{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.lf label{font-size:12px;font-weight:600;color:var(--gray4);}
+.lf input{padding:13px 14px;border:1.5px solid var(--gray2);border-radius:10px;font-size:15px;outline:none;font-family:'Outfit','Noto Sans TC',sans-serif;transition:border .2s;}
+.lf input:focus{border-color:var(--blue);}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Outfit','Noto Sans TC',sans-serif;}
+.hint{background:var(--gray1);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--gray3);margin-top:14px;line-height:1.8;}
+
+/* DASHBOARD */
+#dashboard{display:none;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--navy);padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(15,31,61,.3);}
+.topbar-logo{font-size:22px;}
+.topbar-info{flex:1;}
+.topbar-title{font-size:15px;font-weight:700;color:white;}
+.topbar-sub{font-size:11px;color:rgba(255,255,255,.45);}
+.topbar-badge{background:rgba(245,158,11,.2);border:1px solid rgba(245,158,11,.4);color:var(--gold);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;flex-shrink:0;}
+.topbar-out{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;flex-shrink:0;}
+
+.body{padding:16px;display:flex;flex-direction:column;gap:16px;max-width:600px;margin:0 auto;width:100%;}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.stat{background:white;border-radius:14px;padding:14px 10px;text-align:center;box-shadow:var(--shadow);}
+.stat-num{font-size:24px;font-weight:800;color:var(--navy);}
+.stat-label{font-size:11px;color:var(--gray3);margin-top:3px;}
+
+/* TABS */
+.tabs{display:flex;background:white;border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+.tab{flex:1;padding:13px 8px;text-align:center;font-size:13px;font-weight:600;cursor:pointer;color:var(--gray3);border:none;background:none;font-family:'Outfit','Noto Sans TC',sans-serif;transition:all .2s;}
+.tab.active{color:white;background:linear-gradient(135deg,var(--blue),var(--blue2));}
+.panel{display:none;}
+.panel.active{display:flex;flex-direction:column;gap:14px;}
+
+/* FORM */
+.card{background:white;border-radius:16px;padding:18px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;}
+.sec{font-size:11px;font-weight:700;color:var(--blue);letter-spacing:1px;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid var(--gray1);}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:12px;font-weight:600;color:var(--gray4);}
+.field input,.field select{padding:12px 13px;border:1.5px solid var(--gray2);border-radius:10px;font-size:14px;outline:none;font-family:'Outfit','Noto Sans TC',sans-serif;background:white;-webkit-appearance:none;transition:border .2s;}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath fill='%2394a3b8' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.field input:focus,.field select:focus{border-color:var(--blue);}
+.submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:white;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Outfit','Noto Sans TC',sans-serif;box-shadow:0 4px 14px rgba(26,86,219,.3);}
+.submit:active{opacity:.85;}
+.submit.loading{opacity:.6;pointer-events:none;}
+
+/* CLIENT LIST */
+.cl-card{background:white;border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:12px;}
+.cl-head{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;border-bottom:1px solid var(--gray1);}
+.cl-av{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#06b6d4);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:16px;flex-shrink:0;}
+.cl-info{flex:1;min-width:0;}
+.cl-name{font-size:15px;font-weight:700;color:var(--navy);}
+.cl-phone{font-size:12px;color:var(--gray3);font-family:'Outfit',monospace;}
+.cl-count{background:#dbeafe;color:var(--blue2);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;flex-shrink:0;}
+.pol-list{padding:10px 14px 14px;display:flex;flex-direction:column;gap:8px;}
+.pol-item{background:var(--gray1);border-radius:12px;padding:12px 13px;display:flex;align-items:center;gap:10px;}
+.pol-info{flex:1;min-width:0;}
+.pol-name{font-size:13px;font-weight:600;color:var(--navy);}
+.pol-sub{font-size:11px;color:var(--gray3);margin-top:2px;}
+.pol-amt{font-size:13px;font-weight:700;color:var(--blue);white-space:nowrap;}
+.del-btn{background:none;border:none;color:var(--gray2);cursor:pointer;font-size:18px;flex-shrink:0;}
+.del-btn:active{color:var(--red);}
+.tbadge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;}
+.t-醫療險{background:#dbeafe;color:#1d4ed8}
+.t-壽險{background:#fef3c7;color:#92400e}
+.t-意外險{background:#fce7f3;color:#9d174d}
+.t-癌症險{background:#ede9fe;color:#5b21b6}
+.t-重大疾病險{background:#fee2e2;color:#991b1b}
+.t-失能險{background:#e0f2fe;color:#075985}
+.t-長照險{background:#d1fae5;color:#065f46}
+.empty{text-align:center;padding:32px 20px;color:var(--gray3);}
+.empty-icon{font-size:36px;margin-bottom:8px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:white;padding:12px 20px;border-radius:24px;font-size:14px;font-weight:600;z-index:9999;transition:transform .3s;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 40px);text-align:center;box-shadow:0 4px 20px rgba(15,31,61,.3);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+.saving-indicator{text-align:center;padding:8px;font-size:12px;color:var(--gray3);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">🛡️</div>
+      <div class="login-title">PolicyPal 後台</div>
+      <div class="login-sub">業務員管理系統 Agent Portal</div>
+    </div>
+    <div class="lf"><label>帳號 Account</label><input id="au" placeholder="輸入帳號" value="agent001"></div>
+    <div class="lf"><label>密碼 Password</label><input type="password" id="ap" placeholder="••••••" value="1234"></div>
+    <button class="login-btn" onclick="doLogin()">登入 Sign In</button>
+    <div class="hint">🔑 Demo 帳號：agent001 ／ 密碼：1234<br>📌 正式上線後可設定每位業務員的帳號</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="topbar">
+    <div class="topbar-logo">🛡️</div>
+    <div class="topbar-info">
+      <div class="topbar-title">PolicyPal 業務員後台</div>
+      <div class="topbar-sub" id="agent-name">歡迎登入</div>
+    </div>
+    <div class="topbar-badge" id="client-count-badge">載入中...</div>
+    <button class="topbar-out" onclick="doLogout()">登出</button>
+  </div>
+
+  <div class="body">
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat"><div class="stat-num" id="st1">-</div><div class="stat-label">客戶數</div></div>
+      <div class="stat"><div class="stat-num" id="st2">-</div><div class="stat-label">保單數</div></div>
+      <div class="stat"><div class="stat-num" id="st3">-</div><div class="stat-label">最高日額</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('add',this)">＋ 新增保單</button>
+      <button class="tab" onclick="switchTab('list',this)">📋 客戶清單</button>
+    </div>
+
+    <!-- ADD PANEL -->
+    <div class="panel active" id="panel-add">
+      <div class="card">
+        <div class="sec">客戶資訊 Client Info</div>
+        <div class="field"><label>客戶姓名 *</label><input id="fn" placeholder="王小明"></div>
+        <div class="field"><label>手機號碼 * （客戶 LINE 登入用）</label><input id="fp" type="tel" placeholder="0912345678" inputmode="numeric"></div>
+
+        <div class="sec">保單資訊 Policy Info</div>
+        <div class="field">
+          <label>保險公司 *</label>
+          <select id="fc">
+            <option value="">請選擇...</option>
+            <optgroup label="壽險公司">
+              <option>南山人壽</option><option>國泰人壽</option><option>富邦人壽</option>
+              <option>中國人壽</option><option>新光人壽</option><option>台灣人壽</option>
+              <option>全球人壽</option><option>遠雄人壽</option><option>三商美邦人壽</option>
+              <option>保誠人壽</option><option>宏泰人壽</option><option>安聯人壽</option>
+              <option>法國巴黎人壽</option><option>第一金人壽</option><option>合作金庫人壽</option>
+              <option>元大人壽</option><option>台銀人壽</option><option>台灣人壽</option>
+            </optgroup>
+            <optgroup label="產險公司">
+              <option>富邦產險</option><option>國泰產險</option><option>新光產險</option>
+              <option>台灣產物</option><option>明台產險</option><option>兆豐產險</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>險種 *</label>
+          <select id="ft" onchange="updatePolNames()">
+            <option value="">請選擇...</option>
+            <option>醫療險</option><option>壽險</option><option>意外險</option>
+            <option>癌症險</option><option>重大疾病險</option><option>失能險</option><option>長照險</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>保單名稱 *</label>
+          <select id="fpn"><option value="">請先選擇險種...</option></select>
+        </div>
+        <div class="field"><label>住院日額（元/天，無則填0）</label><input id="fd" type="number" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>手術給付（元，無則填0）</label><input id="fs" type="number" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>一次給付 / 保額（萬元，無則填0）</label><input id="fa" type="number" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>生育給付（元，無則填0）</label><input id="fm" type="number" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>年繳保費（元）</label><input id="fpr" type="number" placeholder="0" inputmode="numeric"></div>
+        <div class="field"><label>繳費日（格式：MM/DD，如 03/15）</label><input id="fdue" placeholder="03/15"></div>
+        <div class="field">
+          <label>繳費年期</label>
+          <select id="fpy">
+            <option>終身繳</option><option>30年期</option><option>20年期</option>
+            <option>10年期</option><option>6年期</option><option>1年期</option>
+          </select>
+        </div>
+        <button class="submit" id="submit-btn" onclick="addPolicy()">＋ 新增此保單</button>
+        <div class="saving-indicator" id="saving-indicator"></div>
+      </div>
+    </div>
+
+    <!-- LIST PANEL -->
+    <div class="panel" id="panel-list">
+      <div id="clients-container"><div class="empty"><div class="empty-icon">⏳</div>載入中...</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://bayjzxyacueqinjheljy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJheWp6eHlhY3VlcWluamhlbGp5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjYwNDEsImV4cCI6MjA5NDk0MjA0MX0.ZVvhMOkv5yA22z3nU84JzfLPt5dQkd2olHCj2jkLc_s';
+
+const AGENTS = { 'agent001': { pass:'1234', name:'陳業務 Agent Chen' } };
+let currentAgent = null;
+let allClients = [], allPolicies = [];
+
+const POL_NAMES = {
+  '醫療險':['住院醫療日額給付附約','實支實付醫療費用附約','日額型住院醫療險','綜合醫療終身附約','手術醫療附約','住院手術醫療附約'],
+  '壽險':['定期壽險主約','終身壽險主約','還本型終身壽險','增額終身壽險','利率變動型終身壽險'],
+  '意外險':['意外傷害保險附約','傷害醫療保險附約','意外失能保險附約','海外急難救助附約'],
+  '癌症險':['癌症醫療終身附約','癌症住院日額附約','重大癌症一次給付附約','癌症初次罹患一次金附約'],
+  '重大疾病險':['重大疾病保險附約','重大疾病一次給付終身附約','特定傷病保險附約','嚴重特定傷病附約'],
+  '失能險':['失能扶助保險主約','失能照護終身保險','殘廢照護保險附約','失能生活扶助金附約'],
+  '長照險':['長期照顧保險附約','類長照保險主約','長照終身保險','長期看護保險附約'],
+};
+
+// ── Supabase ──
+async function sbFetch(path, method='GET', body=null) {
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_KEY,
+    'Content-Type': 'application/json',
+    'Prefer': 'return=representation'
+  };
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// ── LOGIN ──
+function doLogin() {
+  const u = document.getElementById('au').value.trim();
+  const p = document.getElementById('ap').value;
+  if (AGENTS[u] && AGENTS[u].pass === p) {
+    currentAgent = AGENTS[u];
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'flex';
+    document.getElementById('agent-name').textContent = `歡迎，${currentAgent.name}`;
+    loadData();
+  } else {
+    showToast('❌ 帳號或密碼錯誤');
+  }
+}
+function doLogout() {
+  currentAgent = null;
+  document.getElementById('login').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+}
+
+// ── LOAD DATA ──
+async function loadData() {
+  try {
+    allClients = await sbFetch('clients?select=*&order=created_at.desc');
+    allPolicies = await sbFetch('policies?select=*');
+    updateStats();
+    renderClients();
+  } catch(e) {
+    showToast('⚠️ 載入失敗：' + e.message);
+  }
+}
+
+function updateStats() {
+  const total = allPolicies.length;
+  const maxDaily = allClients.reduce((max, c) => {
+    const tot = allPolicies.filter(p => p.client_id === c.id).reduce((s,p) => s+(p.daily_benefit||0), 0);
+    return Math.max(max, tot);
+  }, 0);
+  document.getElementById('st1').textContent = allClients.length;
+  document.getElementById('st2').textContent = total;
+  document.getElementById('st3').textContent = maxDaily ? '$'+maxDaily.toLocaleString() : '$0';
+  document.getElementById('client-count-badge').textContent = `${allClients.length} 位客戶`;
+}
+
+// ── TABS ──
+function switchTab(t, btn) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+t).classList.add('active');
+  if (t === 'list') { loadData(); }
+}
+
+function updatePolNames() {
+  const type = document.getElementById('ft').value;
+  const sel = document.getElementById('fpn');
+  const names = POL_NAMES[type] || [];
+  sel.innerHTML = names.length ? names.map(n => `<option>${n}</option>`).join('') : '<option>請先選擇險種...</option>';
+}
+
+// ── ADD POLICY ──
+async function addPolicy() {
+  const name = document.getElementById('fn').value.trim();
+  const phone = document.getElementById('fp').value.replace(/\D/g,'');
+  const company = document.getElementById('fc').value;
+  const type = document.getElementById('ft').value;
+  const policyName = document.getElementById('fpn').value;
+
+  if (!name||!phone||!company||!type||!policyName) { showToast('⚠️ 請填寫所有必填欄位'); return; }
+  if (!/^09\d{8}$/.test(phone)) { showToast('⚠️ 手機號碼格式錯誤'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  const indicator = document.getElementById('saving-indicator');
+  btn.classList.add('loading');
+  btn.textContent = '儲存中...';
+  indicator.textContent = '正在連線到資料庫...';
+
+  try {
+    // 找或建立客戶
+    let clients = await sbFetch(`clients?phone=eq.${phone}&select=*`);
+    let client;
+    if (clients.length) {
+      client = clients[0];
+      // 更新名字
+      if (client.name !== name) {
+        await sbFetch(`clients?id=eq.${client.id}`, 'PATCH', { name });
+        client.name = name;
+      }
+    } else {
+      const res = await sbFetch('clients', 'POST', { name, phone });
+      client = Array.isArray(res) ? res[0] : res;
+    }
+
+    indicator.textContent = '新增保單中...';
+
+    // 新增保單
+    await sbFetch('policies', 'POST', {
+      client_id: client.id,
+      company,
+      type,
+      policy_name: policyName,
+      daily_benefit: parseInt(document.getElementById('fd').value)||0,
+      surgery_benefit: parseInt(document.getElementById('fs').value)||0,
+      lump_sum: parseInt(document.getElementById('fa').value)||0,
+      maternity_benefit: parseInt(document.getElementById('fm').value)||0,
+      annual_premium: parseInt(document.getElementById('fpr').value)||0,
+      due_date: document.getElementById('fdue').value||null,
+      pay_years: document.getElementById('fpy').value,
+    });
+
+    showToast(`✅ 已為 ${name} 新增保單！客戶可在 LINE 立即查詢`);
+    // 清空欄位
+    ['fc','fd','fs','fa','fm','fpr','fdue'].forEach(id => document.getElementById(id).value='');
+    document.getElementById('ft').value='';
+    document.getElementById('fpn').innerHTML='<option>請先選擇險種...</option>';
+    indicator.textContent = '✅ 儲存成功！客戶可立即在 LINE 查詢';
+    loadData();
+
+  } catch(e) {
+    showToast('❌ 儲存失敗：' + e.message);
+    indicator.textContent = '❌ 儲存失敗，請再試一次';
+  }
+
+  btn.classList.remove('loading');
+  btn.textContent = '＋ 新增此保單';
+}
+
+// ── RENDER CLIENTS ──
+function renderClients() {
+  const c = document.getElementById('clients-container');
+  if (!allClients.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-icon">📂</div>尚無客戶資料<br><small>請在左側新增保單</small></div>';
+    return;
+  }
+  c.innerHTML = allClients.map(cl => {
+    const pols = allPolicies.filter(p => p.client_id === cl.id);
+    return `<div class="cl-card">
+      <div class="cl-head" onclick="togglePol('${cl.id}')">
+        <div class="cl-av">${cl.name[0]}</div>
+        <div class="cl-info">
+          <div class="cl-name">${cl.name}</div>
+          <div class="cl-phone">${cl.phone}</div>
+        </div>
+        <div class="cl-count">${pols.length} 張保單</div>
+      </div>
+      <div id="pol-${cl.id}" class="pol-list" style="display:none">
+        ${pols.length ? pols.map(p => `
+          <div class="pol-item">
+            <div class="pol-info">
+              <div class="pol-name">${p.policy_name}</div>
+              <div class="pol-sub">${p.company} · <span class="tbadge t-${p.type}">${p.type}</span> ${p.due_date ? '📅'+p.due_date : ''}</div>
+            </div>
+            <div class="pol-amt">${p.daily_benefit ? '$'+p.daily_benefit.toLocaleString()+'/天' : p.lump_sum ? p.lump_sum+'萬' : '—'}</div>
+            <button class="del-btn" onclick="delPolicy('${p.id}')">✕</button>
+          </div>`).join('') : '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:12px">尚無保單</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePol(id) {
+  const el = document.getElementById('pol-'+id);
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+
+async function delPolicy(id) {
+  if (!confirm('確定要刪除這張保單嗎？')) return;
+  try {
+    await sbFetch(`policies?id=eq.${id}`, 'DELETE');
+    allPolicies = allPolicies.filter(p => p.id !== id);
+    updateStats();
+    renderClients();
+    showToast('🗑️ 已刪除');
+  } catch(e) {
+    showToast('❌ 刪除失敗');
+  }
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
