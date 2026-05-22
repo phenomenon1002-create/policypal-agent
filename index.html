@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -303,12 +302,12 @@ function showRegister(){document.getElementById('login-form').style.display='non
 function showLogin(){document.getElementById('register-form').style.display='none';document.getElementById('login-form').style.display='block';}
 
 async function doLogin(){
-  const phone=document.getElementById('au').value.replace(/\D/g,'');
+  const phone=document.getElementById('au').value.replace(/[^0-9]/g,'');
   const pass=document.getElementById('ap').value;
   if(!phone||!pass){showToast('⚠️ 請填寫帳號與密碼');return;}
   try{
-    const agents=await sbFetch('agents?phone=eq.'+phone+'&password=eq.'+encodeURIComponent(pass)+'&select=*');
-    if(agents.length){
+    const agents=await sbFetch('agents?phone=eq.'+phone+'&password=eq.'+pass+'&select=*');
+    if(agents&&agents.length){
       currentAgent=agents[0];
       document.getElementById('login').style.display='none';
       document.getElementById('dashboard').style.display='flex';
@@ -405,7 +404,7 @@ async function addPolicy(){
       client_id:client.id,company,type,policy_name:policyName,
       daily_benefit:gv('fd'),surgery_benefit:gv('fs'),
       inpatient_benefit:gv('finpatient'),outpatient_benefit:gv('foutpatient'),
-      fracture_benefit:gv('ffracture'),accident_benefit:gv('faccident'),
+      fracture_benefit:gv('ffracture'),accident_outpatient:gv('faccident'),
       accident_death:gv('faccDeath'),disability_benefit:gv('fdisability'),
       critical_illness:gv('fcritical'),lump_sum:gv('fa'),
       cancer_daily:gv('fcancerDaily'),cancer_surgery:gv('fcancerSurgery'),
@@ -472,7 +471,7 @@ function loadHealthCheck(){
   const inpatient=sum('inpatient_benefit');
   const outpatient=sum('outpatient_benefit');
   const fracture=sum('fracture_benefit');
-  const accident=sum('accident_benefit');
+  const accident=sum('accident_outpatient');
   const accDeath=sum('accident_death');
   const disability=sum('disability_benefit');
   const critical=sum('critical_illness');
