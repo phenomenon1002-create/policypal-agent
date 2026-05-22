@@ -426,15 +426,31 @@ function renderClients(){
   if(!allClients.length){c.innerHTML='<div class="empty"><div class="empty-icon">📂</div>尚無客戶資料</div>';return;}
   c.innerHTML=allClients.map(cl=>{
     const pols=allPolicies.filter(p=>p.client_id===cl.id);
-    return '<div class="cl-card"><div class="cl-head" onclick="togglePol(''+cl.id+'')">'
-      +'<div class="cl-av">'+cl.name[0]+'</div>'
-      +'<div class="cl-info"><div class="cl-name">'+cl.name+'</div><div class="cl-phone">'+cl.phone+'</div></div>'
-      +'<div class="cl-count">'+pols.length+' 張</div>'
-      +'<button class="check-btn" onclick="event.stopPropagation();goHealthCheck(''+cl.id+'')">🏥 健診</button>'
-      +'</div>'
-      +'<div id="pol-'+cl.id+'" class="pol-list" style="display:none">'
-      +(pols.length?pols.map(p=>'<div class="pol-item"><div class="pol-info"><div class="pol-name">'+p.policy_name+'</div><div class="pol-sub">'+p.company+' · <span class="tbadge t-'+p.type+'">'+p.type+'</span></div></div><div class="pol-amt">'+(p.daily_benefit?'$'+p.daily_benefit.toLocaleString()+'/天':p.lump_sum?p.lump_sum+'萬':'—')+'</div><button class="del-btn" onclick="delPolicy(''+p.id+'')">✕</button></div>').join(''):'<div style="text-align:center;color:#94a3b8;font-size:13px;padding:12px">尚無保單</div>')
-      +'</div></div>';
+    const cid=cl.id;
+    let html='<div class="cl-card">';
+    html+='<div class="cl-head" onclick="togglePol(`'+cid+'`)">';
+    html+='<div class="cl-av">'+cl.name[0]+'</div>';
+    html+='<div class="cl-info"><div class="cl-name">'+cl.name+'</div><div class="cl-phone">'+cl.phone+'</div></div>';
+    html+='<div class="cl-count">'+pols.length+' 張</div>';
+    html+='<button class="check-btn" onclick="event.stopPropagation();goHealthCheck(`'+cid+'`)">🏥 健診</button>';
+    html+='</div>';
+    html+='<div id="pol-'+cid+'" class="pol-list" style="display:none">';
+    if(pols.length){
+      pols.forEach(p=>{
+        const pid=p.id;
+        const val=p.daily_benefit?'$'+p.daily_benefit.toLocaleString()+'/天':p.lump_sum?p.lump_sum+'萬':'—';
+        html+='<div class="pol-item">';
+        html+='<div class="pol-info"><div class="pol-name">'+p.policy_name+'</div>';
+        html+='<div class="pol-sub">'+p.company+' · <span class="tbadge t-'+p.type+'">'+p.type+'</span></div></div>';
+        html+='<div class="pol-amt">'+val+'</div>';
+        html+='<button class="del-btn" onclick="delPolicy(`'+pid+'`)">✕</button>';
+        html+='</div>';
+      });
+    }else{
+      html+='<div style="text-align:center;color:#94a3b8;font-size:13px;padding:12px">尚無保單</div>';
+    }
+    html+='</div></div>';
+    return html;
   }).join('');
 }
 
