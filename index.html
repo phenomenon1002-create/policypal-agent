@@ -152,6 +152,7 @@ body{font-family:'Outfit','Noto Sans TC',sans-serif;background:var(--bg);min-hei
     <div class="tabs">
       <button class="tab active" onclick="switchTab('add',this)">＋ 新增保單</button>
       <button class="tab" onclick="switchTab('list',this)">📋 客戶清單</button>
+      <button class="tab" onclick="switchTab('check',this)">🏥 保單健診</button>
     </div>
 
     <div class="panel active" id="panel-add">
@@ -159,6 +160,11 @@ body{font-family:'Outfit','Noto Sans TC',sans-serif;background:var(--bg);min-hei
         <div class="sec">客戶資訊 Client Info</div>
         <div class="field"><label>客戶姓名 *</label><input id="fn" placeholder="王小明"></div>
         <div class="field"><label>手機號碼 * （客戶 LINE 登入用）</label><input id="fp" type="tel" placeholder="0912345678" inputmode="numeric"></div>
+        <div class="field"><label>出生年月日</label><input id="fbd" type="date"></div>
+        <div class="field"><label>性別</label><select id="fgender"><option value="">請選擇...</option><option value="male">男</option><option value="female">女</option></select></div>
+        <div class="field"><label>職業類別</label><select id="focc"><option value="">請選擇...</option><option value="1">第1類（內勤/文職）</option><option value="2">第2類（業務/外勤）</option><option value="3">第3類（技術/輕勞動）</option><option value="4">第4類（重勞動）</option></select></div>
+        <div class="field"><label>婚姻狀況</label><select id="fmarital"><option value="">請選擇...</option><option value="single">未婚</option><option value="married">已婚</option><option value="divorced">離婚</option></select></div>
+        <div class="field"><label>備註</label><input id="fnote" placeholder="客戶備註..."></div>
         <div class="sec">保單資訊 Policy Info</div>
         <div class="field">
           <label>保險公司 *</label>
@@ -295,6 +301,7 @@ function switchTab(t,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');document.getElementById('panel-'+t).classList.add('active');
   if(t==='list')loadData();
+  if(t==='check'){loadData().then(()=>initHealthCheck());}
 }
 function updatePolNames(){
   const type=document.getElementById('ft').value,sel=document.getElementById('fpn'),names=POL_NAMES[type]||[];
@@ -312,6 +319,20 @@ async function addPolicy(){
     if(clients.length){client=clients[0];if(client.name!==name){await sbFetch('clients?id=eq.'+client.id,'PATCH',{name});client.name=name;}}
     else{const res=await sbFetch('clients','POST',{name,phone});client=Array.isArray(res)?res[0]:res;}
     ind.textContent='新增保單中...';
+    // Update client with extra info
+    const extraData = {};
+    const bd = document.getElementById('fbd').value;
+    const gender = document.getElementById('fgender').value;
+    const occ = document.getElementById('focc').value;
+    const marital = document.getElementById('fmarital').value;
+    const note = document.getElementById('fnote').value;
+    if(bd) extraData.birthdate = bd;
+    if(gender) extraData.gender = gender;
+    if(occ) extraData.occupation = occ;
+    if(marital) extraData.marital_status = marital;
+    if(note) extraData.note = note;
+    if(Object.keys(extraData).length) await sbFetch('clients?id=eq.'+client.id,'PATCH',extraData);
+
     await sbFetch('policies','POST',{client_id:client.id,company,type,policy_name:policyName,
       daily_benefit:parseInt(document.getElementById('fd').value)||0,surgery_benefit:parseInt(document.getElementById('fs').value)||0,
       lump_sum:parseInt(document.getElementById('fa').value)||0,maternity_benefit:parseInt(document.getElementById('fm').value)||0,
@@ -339,6 +360,120 @@ async function delPolicy(id){
   catch(e){showToast('❌ 刪除失敗');}
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+// ── HEALTH CHECK ──
+async function initHealthCheck(){
+  const sel=document.getElementById('check-client');
+  sel.innerHTML='<option value="">請選擇客戶...</option>';
+  allClients.forEach(c=>{
+    const opt=document.createElement('option');
+    opt.value=c.id;
+    opt.textContent=c.name+' '+c.phone;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadHealthCheck(){
+  const cid=document.getElementById('check-client').value;
+  const res=document.getElementById('health-result');
+  if(!cid){res.innerHTML='';return;}
+  const client=allClients.find(c=>c.id===cid);
+  const pols=allPolicies.filter(p=>p.client_id===cid);
+
+  // Calculate totals
+  const daily=pols.reduce((s,p)=>s+(p.daily_benefit||0),0);
+  const surgery=pols.reduce((s,p)=>s+(p.surgery_benefit||0),0);
+  const cancer=pols.reduce((s,p)=>s+(p.lump_sum||0),0);
+  const maternity=pols.reduce((s,p)=>s+(p.maternity_benefit||0),0);
+  const premium=pols.reduce((s,p)=>s+(p.annual_premium||0),0);
+
+  // Standards
+  const stdDaily=3000, stdSurgery=100000, stdCancer=100;
+
+  // Age calculation
+  let age='未填';
+  if(client.birthdate){
+    const bd=new Date(client.birthdate);
+    const now=new Date();
+    age=Math.floor((now-bd)/(365.25*24*3600*1000))+'歲';
+  }
+
+  const gender=client.gender==='male'?'男':client.gender==='female'?'女':'未填';
+  const marital=client.marital_status==='married'?'已婚':client.marital_status==='single'?'未婚':client.marital_status==='divorced'?'離婚':'未填';
+
+  function statusBadge(val,std,unit){
+    const ok=val>=std;
+    const color=ok?'#10b981':'#ef4444';
+    const label=ok?'✅ 足夠':'⚠️ 不足';
+    return `<span style="color:${color};font-weight:700">${label}</span>`;
+  }
+
+  function row(label,val,std,unit,extra=''){
+    const ok=val>=std;
+    const bg=ok?'#f0fdf4':'#fff7f0';
+    const border=ok?'#10b981':'#ef4444';
+    return `<div style="background:${bg};border-left:4px solid ${border};border-radius:8px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#1e293b">${label}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:2px">建議：${std.toLocaleString()}${unit} ${extra}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:800;color:#1e293b">${val.toLocaleString()}${unit}</div>
+          <div style="font-size:11px;margin-top:2px">${statusBadge(val,std,unit)}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  const hasLongCare=pols.some(p=>p.type==='長照險');
+  const hasDisability=pols.some(p=>p.type==='失能險');
+  const hasAccident=pols.some(p=>p.type==='意外險');
+  const hasLife=pols.some(p=>p.type==='壽險');
+
+  function missingBadge(has,label){
+    if(has) return `<div style="background:#f0fdf4;border-left:4px solid #10b981;border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:700">${label}</span><span style="color:#10b981;font-weight:700">✅ 已投保</span></div>`;
+    return `<div style="background:#fff7f0;border-left:4px solid #ef4444;border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between"><span style="font-size:13px;font-weight:700">${label}</span><span style="color:#ef4444;font-weight:700">⚠️ 尚未投保</span></div>`;
+  }
+
+  res.innerHTML=`
+    <div class="card">
+      <div class="sec">客戶基本資料</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+        <div><span style="color:#94a3b8">姓名</span><br><strong>${client.name}</strong></div>
+        <div><span style="color:#94a3b8">年齡</span><br><strong>${age}</strong></div>
+        <div><span style="color:#94a3b8">性別</span><br><strong>${gender}</strong></div>
+        <div><span style="color:#94a3b8">婚姻</span><br><strong>${marital}</strong></div>
+        <div><span style="color:#94a3b8">保單數</span><br><strong>${pols.length} 張</strong></div>
+        <div><span style="color:#94a3b8">年繳保費</span><br><strong>$${premium.toLocaleString()}</strong></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec">保障缺口分析</div>
+      ${row('🏥 住院日額',daily,stdDaily,'元/天','（建議3,000元/天）')}
+      ${row('🔪 手術給付',surgery,stdSurgery,'元','（建議10萬以上）')}
+      ${row('🎗️ 癌症/重病一次金',cancer,stdCancer,'萬','（建議100萬以上）')}
+      ${missingBadge(hasLife,'💛 壽險')}
+      ${missingBadge(hasAccident,'🦺 意外險')}
+      ${missingBadge(hasLongCare,'👴 長照險')}
+      ${missingBadge(hasDisability,'♿ 失能險')}
+      ${client.marital_status==='married'?missingBadge(maternity>0,'👶 生育給付'):''}
+    </div>
+    <div class="card">
+      <div class="sec">📋 現有保單明細</div>
+      ${pols.length?pols.map(p=>`
+        <div style="background:#f8fafc;border-radius:8px;padding:10px 12px;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:700;color:#1e293b">${p.policy_name}</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px">${p.company} · ${p.type} · ${p.pay_years||''}</div>
+          <div style="font-size:12px;color:#7c3aed;margin-top:4px;font-weight:600">
+            ${p.daily_benefit?'日額 $'+p.daily_benefit.toLocaleString()+' ':''}
+            ${p.surgery_benefit?'手術 $'+p.surgery_benefit.toLocaleString()+' ':''}
+            ${p.lump_sum?'一次金 '+p.lump_sum+'萬 ':''}
+            ${p.annual_premium?'年繳 $'+p.annual_premium.toLocaleString():''}
+          </div>
+        </div>`).join(''):'<div style="text-align:center;color:#94a3b8;padding:16px">尚無保單資料</div>'}
+    </div>`;
+}
 </script>
 </body>
 </html>
