@@ -113,10 +113,20 @@ body{font-family:'Outfit','Noto Sans TC',sans-serif;background:var(--bg);min-hei
       <div class="login-title">保寶險後台</div>
       <div class="login-sub">業務員管理系統 Agent Portal</div>
     </div>
-    <div class="lf"><label>帳號 Account</label><input id="au" placeholder="輸入帳號" value="agent001"></div>
-    <div class="lf"><label>密碼 Password</label><input type="password" id="ap" placeholder="••••••" value="1234"></div>
-    <button class="login-btn" onclick="doLogin()">登入 Sign In</button>
-    <div class="hint">🔑 Demo 帳號：agent001 ／ 密碼：1234<br>📌 正式上線後可設定每位業務員的帳號</div>
+    <div id="login-form">
+      <div class="lf"><label>手機號碼</label><input id="au" placeholder="09xxxxxxxx" inputmode="numeric"></div>
+      <div class="lf"><label>密碼 Password</label><input type="password" id="ap" placeholder="••••••"></div>
+      <button class="login-btn" onclick="doLogin()">登入 Sign In</button>
+      <div style="text-align:center;margin-top:14px;font-size:13px;color:#94a3b8">還沒有帳號？<span onclick="showRegister()" style="color:#7c3aed;font-weight:700;cursor:pointer">立即註冊</span></div>
+    </div>
+    <div id="register-form" style="display:none">
+      <div class="lf"><label>姓名 *</label><input id="rn" placeholder="王小明"></div>
+      <div class="lf"><label>手機號碼 * （作為登入帳號）</label><input id="rp" placeholder="09xxxxxxxx" inputmode="numeric"></div>
+      <div class="lf"><label>設定密碼 *</label><input type="password" id="rpw" placeholder="至少4位數"></div>
+      <div class="lf"><label>確認密碼 *</label><input type="password" id="rpw2" placeholder="再輸入一次"></div>
+      <button class="login-btn" onclick="doRegister()">註冊帳號</button>
+      <div style="text-align:center;margin-top:14px;font-size:13px;color:#94a3b8">已有帳號？<span onclick="showLogin()" style="color:#7c3aed;font-weight:700;cursor:pointer">返回登入</span></div>
+    </div>
   </div>
 </div>
 
