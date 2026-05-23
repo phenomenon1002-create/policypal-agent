@@ -653,11 +653,11 @@ function loadHealthCheck(){
           </div>
         </div>`;
       }).join(''):'<div style="text-align:center;color:#94a3b8;padding:20px">尚無保單資料</div>'}
-    </div>`
+    </div>`;
   document.getElementById('capture-btn-wrap').style.display='block';
 }
 
-async function delPolicyy(id){
+async function delPolicy(id){
   if(!confirm('確定要刪除這張保單嗎？'))return;
   try{await sbFetch('policies?id=eq.'+id,'DELETE');allPolicies=allPolicies.filter(p=>p.id!==id);updateStats();renderClients();showToast('🗑️ 已刪除');}
   catch(e){showToast('❌ 刪除失敗');}
