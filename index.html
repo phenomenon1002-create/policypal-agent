@@ -598,7 +598,7 @@ function loadHealthCheck(){
     </div>
 
     <!-- 四象限 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <div id="health-cross" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       ${qcard('🏥','小疾病','#0369a1',
         row('住院日額',daily,3000,'元/天')+
         row('定額手術',surgeryFixed,50000,'元')+
@@ -666,7 +666,7 @@ async function delPolicy(id){
 async function captureHealthReport(){
   const btn = document.getElementById('capture-btn-wrap');
   btn.style.display = 'none';
-  const target = document.getElementById('health-result');
+  const target = document.getElementById('health-cross');
   try {
     const canvas = await html2canvas(target, {
       scale: 2,
